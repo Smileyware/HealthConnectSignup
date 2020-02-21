@@ -1,15 +1,16 @@
-import React, { useState, Fragment } from "react";
-import { Formik, Field, FieldArray, Form, ErrorMessage } from "formik";
-import * as Yup from "yup";
-import "./questionaire.css";
-import setQuestions from "../../actions/setQuestions";
+import React, { useState, Fragment } from 'react';
+import { Formik, Field, FieldArray, Form, ErrorMessage } from 'formik';
+import * as Yup from 'yup';
+import './questionaire.css';
+import setQuestions from '../../actions/setQuestions';
+import { postQuestionsApi } from '../../Api.js';
 
 const Questionaire = ({ questions }) => {
   const [questionsList, setQuestionsList] = useState(null);
 
   function questionsResponse(result) {
-    if (!result || result == "Error") {
-      alert("Error getting questions");
+    if (!result || result == 'Error') {
+      alert('Error getting questions');
       return;
     }
     const topTierQuestions =
@@ -27,117 +28,120 @@ const Questionaire = ({ questions }) => {
     !isLoading && (
       <Formik
         initialValues={{ questions: questionsList }}
-        validationSchema={Yup.object({
-          firstName: Yup.string()
-            .max(15, "Must be 15 characters or less")
-            .required("Required"),
-          lastName: Yup.string()
-            .max(20, "Must be 20 characters or less")
-            .required("Required"),
-          email: Yup.string()
-            .email("Invalid email address")
-            .required("Required")
-        })}
         onSubmit={(values, { setSubmitting }) => {
           setTimeout(() => {
-            alert(JSON.stringify(values, null, 2));
+            postQuestionsApi(values, callback);
+            function callback(result) {
+              if (!result || result == 'Error') {
+                alert(`Error: ${result}`);
+                return;
+              }
+              window.location.assign(
+                `${window.location.href}ProviderApplication`
+              );
+            }
             setSubmitting(false);
           }, 400);
         }}
-        render={({ values }) => (
-          <Form>
-            <FieldArray
-              name="questions"
-              render={arrayHelpers => (
-                <div className="questionaire">
-                  {values.questions && values.questions.length > 0
-                    ? values.questions.map((question, index) => {
-                        const isBool =
-                            question && question.questionType == "bool",
-                          isNum = question && question.questionType == "num",
-                          isText = question && question.questionType == "text",
-                          isInput = question && !isBool && !isNum && !isText;
-                        const inputFieldsStr = isInput && question.questionType;
-
-                        const inputFields =
-                          inputFieldsStr && inputFieldsStr.split(",");
-
-                        const isTopLevel = question.isParent && !question.parent;
-
-                        const hasChild = question.isParent;
-                        const children =
-                          hasChild &&
-                          questions.filter(
-                            child => child.parent == question.Id
-                          );
-
-                        return (
-                          <div>
-                            {isTopLevel && (
-                              <label
-                                name={`${question}.questionText`}
-                                className="field"
-                                key={index}
-                              >
-                                {question && question.questionText}
-                                <Field name={`questions.${index}.answer`} />
-                                {/* <Field name={`questions.${index}.answer`} /> */}
-                                {
-                                isBool && (
-                                  <Field
-                                    as="select"
-                                    name={`questions.${index}.answer`}
-                                  >
-                                    <RenderOptions/>
-                                  </Field>
-                                )}
-                                {
-                                isText && (
-                                  <Field
-                                    as="textarea"
-                                    name={`questions.${index}.answer`}
-                                  />
-                                )}
-                              </label>
-                            )}
-                          </div>
-                        );
-                      })
-                    : ""}
-                  <button type="submit">Submit</button>
-                </div>
-              )}
-            />
-          </Form>
-        )}
+        render={props => <HealthConnectForm {...props} />}
       />
-
-      //   <Form className="signup-form">
-      //     <label htmlFor="firstName">
-      //       Are your hospital/health system product or service decisions made by
-      //       a Value Analysis?
-      //     </label>
-      //     <Field name="firstName" type="text" />
-      //     <ErrorMessage name="firstName" />
-      //     <label htmlFor="lastName">Last Name</label>
-      //     <Field name="lastName" type="text" />
-      //     <ErrorMessage name="lastName" />
-      //     <label htmlFor="email">Email Address</label>
-      //     <Field name="email" type="email" />
-      //     <ErrorMessage name="email" />
-      //     <button type="submit">Submit</button>
-      //   </Form>
-      // </Formik>
     )
   );
 };
 
 export default Questionaire;
 
-const RenderOptions = ({ isBool = true, options }) => {
+const HealthConnectForm = ({ values }) => (
+  <Form>
+    <FieldArray
+      name='questions'
+      render={arrprops => (
+        <div className='questionaire'>
+          {values.questions && values.questions.length > 0
+            ? values.questions.map((question, index) => {
+                const isBool = question && question.questionType == 'bool',
+                  isNum = question && question.questionType == 'num',
+                  isText = question && question.questionType == 'text',
+                  isInput = question && !isBool && !isNum && !isText;
+                const inputFieldsStr = isInput && question.questionType;
+
+                const inputFields = inputFieldsStr && inputFieldsStr.split(',');
+                const isTopLevel = question.isParent && !question.parent;
+                const hasChild = question.isParent;
+
+                const children =
+                  hasChild &&
+                  values.questions.map(
+                    child => child.parent === question.Id
+                  );
+                const childType =
+                  hasChild && children[0] && children[0].questionType && isBool;
+
+                return (
+                  <div>
+                    {(
+                      <label
+                        name={`${question}.questionText`}
+                        className='field'
+                        key={index}
+                      >
+                        {question && question.questionText}
+                        {isBool && (
+                          <Field as='select' name={`questions.${index}.answer`}>
+                            <BoolInput />
+                          </Field>
+                        )} */}
+                        {hasChild && isBool && (
+                          <Field
+                            as='select'
+                            name={`questions.${index}.answer`}
+                          />
+                        )}
+                        {(isText && (
+                          <Field
+                            as='textarea'
+                            name={`questions.${index}.answer`}
+                          />
+                        )) ||
+                          (isInput && (
+                              <Field component={
+                                RenderOptions
+
+                              } as='select' name={`questions.${index}.answer`} >
+                          </Field>
+                          ))}
+                      </label>
+                    )}
+                  </div>
+                );
+              })
+            : ''}
+          <button type='submit'>Submit</button>
+        </div>
+      )}
+    />
+  </Form>
+);
+
+const BoolInput = () => {
   return (
     <Fragment>
-      <option value='1'>Yes</option>
+      <option>Select</option>
+      <option value='1'>
+        Yes
+      </option>
+      <option value='0'>No</option>
+    </Fragment>
+  );
+};
+
+const RenderOptions = ({ options }) => {
+  return (
+    <Fragment>
+      <option>Select</option>
+      <option value='1'>
+        Yes
+      </option>
       <option value='0'>No</option>
     </Fragment>
   );

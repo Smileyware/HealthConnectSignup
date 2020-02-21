@@ -14,7 +14,7 @@ function App() {
         <div className="Dashboard-container">
           <header className="App-header">
             <div className="Main-menu">
-              <Menu />
+              {/* <Menu /> */}
             </div>
           </header>
           <div>

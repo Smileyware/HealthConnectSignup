@@ -1,9 +1,9 @@
-import Amplify from 'aws-amplify';
-import { API } from 'aws-amplify';
+import Amplify from "aws-amplify";
+import { API } from "aws-amplify";
 
-const HcEndpoint = 'http://localhost:59210/api/';
-const Questions = 'Questions';
-const Answers = 'Answers';
+const HcEndpoint = "http://localhost:59210/api/";
+const Questions = "Questions";
+const Answers = "Answers";
 
 Amplify.configure({
   API: {
@@ -20,32 +20,37 @@ Amplify.configure({
   }
 });
 
-export function getQuestionsApi (callback) {
+export function getQuestionsApi(callback) {
   API.get(Questions, Questions)
     .then(response => {
       if (response != null) {
         callback(response);
       } else {
-        alert('Error getting Questions: ' + response);
-        callback('Error');
+        alert("Error getting Questions: " + response);
+        callback("Error");
       }
     })
     .catch(error => {
       console.log(error.response);
-      callback('Error');
+      callback("Error");
     });
-};
+}
 
 export function postQuestionsApi(props, callback) {
-
-  const answers = props;
+  const { questions } = props;
+  const answers =
+    questions &&
+    questions.map(question => ({
+      questionId: question.id,
+      userId: 1,
+      response: question.answer
+    }));
   let init = {
     body: {
-     questionId: props.id,
-      userId: props.userId,
+      answer: answers
     },
     headers: {
-      'Content-Type': 'application/json'
+      "Content-Type": "application/json"
     }
   };
 
@@ -54,24 +59,24 @@ export function postQuestionsApi(props, callback) {
       if (response !== null) {
         callback(response);
       } else {
-        alert('Server Error: Couldnt Post Collection');
-        callback('Error');
+        alert("Server Error: Couldnt Post Collection");
+        callback("Error");
       }
     })
     .catch(error => {
-      console.log('Error Posting Collection');
+      console.log("Error Posting Collection");
     });
-};
+}
 
 export function postUserApi(props, callback) {
   let init = {
     body: {
-        firstName: props.firstName,
-          lastName: props.lastName,
-          email: props.email,
+      firstName: props.firstName,
+      lastName: props.lastName,
+      email: props.email
     },
     headers: {
-      'Content-Type': 'application/json'
+      "Content-Type": "application/json"
     }
   };
 
@@ -80,12 +85,12 @@ export function postUserApi(props, callback) {
       if (response !== null) {
         callback(response);
       } else {
-        alert('Server Error: Couldnt Post User');
-        callback('Error');
+        alert("Server Error: Couldnt Post User");
+        callback("Error");
       }
     })
     .catch(error => {
-      alert('Error Posting User');
-      console.log('Error Posting User');
+      alert("Error Posting User");
+      console.log("Error Posting User");
     });
-};
+}

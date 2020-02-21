@@ -4,21 +4,23 @@ import * as Yup from 'yup';
 import './signup.css';
 import { postUserApi } from '../../Api.js';
 
+const validationSchema = Yup.object({
+  firstName: Yup.string()
+    .max(15, 'Must be 15 characters or less')
+    .required('Required'),
+  lastName: Yup.string()
+    .max(20, 'Must be 20 characters or less')
+    .required('Required'),
+  email: Yup.string()
+    .email('Invalid email address')
+    .required('Required')
+});
+
 const UserSignup = () => {
   return (
     <Formik
       initialValues={{ firstName: '', lastName: '', email: '' }}
-      validationSchema={Yup.object({
-        firstName: Yup.string()
-          .max(15, 'Must be 15 characters or less')
-          .required('Required'),
-        lastName: Yup.string()
-          .max(20, 'Must be 20 characters or less')
-          .required('Required'),
-        email: Yup.string()
-          .email('Invalid email address')
-          .required('Required')
-      })}
+      validationSchema={validationSchema}
       onSubmit={(values, { setSubmitting }) => {
         setTimeout(() => {
           postUserApi(values, callback);
